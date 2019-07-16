@@ -1,24 +1,29 @@
 {% extends 'base.html' %} {% block header %}
-<h1>{% block title %}Posts{% endblock %}</h1>
-{% if g.user %}
-<a class="action" href="{{ url_for('blog.create') }}">New</a>
-{% endif %} {% endblock %} {% block content %} {% for post in posts %}
-<article class="post">
+<h1>{% block title %}Cards{% endblock %}</h1>
+<a class="action" href="{{ url_for('blog.addCard') }}">New Card</a>
+{% endblock %} {% block content %} {% for card in cards %}
+<article class="card">
   <header>
     <div>
-      <h1>{{ post["title"] }}</h1>
-      <div class="about">
-        by {{ post["username"] }} on {{ post["created"].strftime("%Y-%m-%d") }}
+      <h1>{{ card["title"] }}</h1>
+      <div>
+        <small> Made on {{ card["created"].strftime("%Y-%m-%d") }} </small>
       </div>
     </div>
-    {% if g.user['id'] == post['author_id'] %}
-    <a class="action" href="{{ url_for('blog.update', id=post['id']) }}"
-      >Edit</a
-    >
-    {% endif %}
+    {% for task in tasks %} {% if task["pcard"] == card["id"] %}
+    <p class="body">{{ task["body"] }}</p>
+    <hr />
+    {% endif %}{% endfor %}
   </header>
-  <p class="body">{{ post["body"] }}</p>
 </article>
+<a
+  class="action"
+  href="{{ url_for('blog.addTask', id=card['id']) }}"
+  method="post"
+  >Add Task</a
+>
+<br />
+<br />
 {% if not loop.last %}
 <hr />
 {% endif %} {% endfor %} {% endblock %}
