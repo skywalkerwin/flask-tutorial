@@ -10,8 +10,14 @@ from flaskr.db import get_db
 bp = Blueprint('board', __name__)
 
 
+def makedate(dbdate):
+    stringdate = dbdate.strftime("%Y-%m-%d")
+    return stringdate
+
+
 @bp.route('/')
 def index():
+    board = {}
     db = get_db()
     cards = db.execute(
         'SELECT c.id, title,  created'
@@ -19,7 +25,7 @@ def index():
         ' ORDER BY created DESC'
     ).fetchall()
     tasks = db.execute(
-        'SELECT t.id, body, created, pcard'
+        'SELECT t.id, body, created, pcard, torder'
         ' FROM tasks t'
         ' ORDER BY created ASC'
     ).fetchall()
@@ -29,14 +35,17 @@ def index():
         cdata.append([x for x in c])
     for t in tasks:
         tdata.append([x for x in t])
+    for c in cards:
+        board[c['title']] = []
     # return render_template('blog/index.html', cards=cards, tasks=tasks)
     print(cdata, tdata)
-    # return (cards, tasks)
+    print(board)
+    # return (board, cards, tasks)
     return render_template('board/index.html', cards=cards, tasks=tasks)
 
 
 @bp.route('/addCard', methods=('GET', 'POST'))
-@login_required
+# @login_required
 def addCard():
     if request.method == 'POST':
         title = request.form['title']
@@ -50,18 +59,18 @@ def addCard():
         else:
             db = get_db()
             db.execute(
-                'INSERT INTO cards (title)'
-                ' VALUES (?)',
-                (title,)
+                'INSERT INTO cards (title, num_tasks)'
+                ' VALUES (?, ?)',
+                (title, 0)
             )
             db.commit()
-            return redirect(url_for('blog.index'))
+            return redirect(url_for('board.index'))
 
-    return render_template('blog/addCard.html')
+    return render_template('board/addCard.html')
 
 
 @bp.route('/<int:id>/addTask', methods=('GET', 'POST'))
-@login_required
+# @login_required
 def addTask(id):
     if request.method == 'POST':
         body = request.form['body']
@@ -74,20 +83,45 @@ def addTask(id):
             flash(error)
         else:
             db = get_db()
+            num_tasks = db.execute(
+                'SELECT c.num_tasks FROM cards c WHERE c.id=?',
+                (id,)
+            ).fetchone()['num_tasks']
             db.execute(
-                'INSERT INTO tasks (pcard, body)'
-                ' VALUES (?, ?)',
-                (id, body)
+                'UPDATE cards SET num_tasks = ? WHERE id=?',
+                ((num_tasks+1), id)
             )
             db.commit()
-            return redirect(url_for('blog.index'))
+            db.execute(
+                'INSERT INTO tasks (pcard, body, torder) '
+                ' VALUES (?, ?, ?)',
+                (id, body, num_tasks)
+            )
+            db.commit()
+            return redirect(url_for('board.index'))
 
-    return render_template('blog/addTask.html')
+    return render_template('board/addTask.html')
+
+
+def get_post(id, check_author=True):
+    post = get_db().execute(
+        'SELECT p.id, title, body, created, author_id, username'
+        ' FROM post p JOIN user u ON p.author_id = u.id'
+        ' WHERE p.id = ?',
+        (id,)
+    ).fetchone()
+
+    if post is None:
+        abort(404, "Post id {0} doesn't exist.".format(id))
+
+    if check_author and post['author_id'] != g.user['id']:
+        abort(403)
+
+    return post
 
 
 @bp.route('/<int:id>/update', methods=('GET', 'POST'))
-@login_required
-def update(id):
+def updateCard(cid):
     post = get_post(id)
 
     if request.method == 'POST':
@@ -103,9 +137,36 @@ def update(id):
         else:
             db = get_db()
             db.execute(
-                'UPDATE post SET title = ?, body = ?'
+                'UPDATE card SET title = ?, body = ?'
                 ' WHERE id = ?',
-                (title, body, id)
+                (title, body, cid)
+            )
+            db.commit()
+            return redirect(url_for('blog.index'))
+
+    return render_template('blog/update.html', post=post)
+
+
+@bp.route('/<int:id>/update', methods=('GET', 'POST'))
+def updateTask(cid):
+    post = get_post(id)
+
+    if request.method == 'POST':
+        title = request.form['title']
+        body = request.form['body']
+        error = None
+
+        if not title:
+            error = 'Title is required.'
+
+        if error is not None:
+            flash(error)
+        else:
+            db = get_db()
+            db.execute(
+                'UPDATE card SET title = ?, body = ?'
+                ' WHERE id = ?',
+                (title, body, cid)
             )
             db.commit()
             return redirect(url_for('blog.index'))

@@ -1,24 +1,24 @@
 {% extends 'base.html' %} {% block header %}
 <h1>{% block title %}Cards{% endblock %}</h1>
-<a class="action" href="{{ url_for('blog.addCard') }}">New Card</a>
+<a class="action" href="{{ url_for('board.addCard') }}">New Card</a>
 {% endblock %} {% block content %} {% for card in cards %}
 <article class="card">
   <header>
     <div>
       <h1>{{ card["title"] }}</h1>
       <div>
-        <small> Made on {{ card["created"].strftime("%Y-%m-%d") }} </small>
+        <small> {{ card["created"].strftime("%Y-%m-%d") }} </small>
       </div>
     </div>
     {% for task in tasks %} {% if task["pcard"] == card["id"] %}
-    <p class="body">{{ task["body"] }}</p>
+    <p class="body">{{ task["torder"] }}. {{ task["body"] }}</p>
     <hr />
     {% endif %}{% endfor %}
   </header>
 </article>
 <a
   class="action"
-  href="{{ url_for('blog.addTask', id=card['id']) }}"
+  href="{{ url_for('board.addTask', id=card['id']) }}"
   method="post"
   >Add Task</a
 >
