@@ -38,8 +38,8 @@ def index():
     for c in cards:
         board[c['title']] = []
     # return render_template('blog/index.html', cards=cards, tasks=tasks)
-    print(cdata, tdata)
-    print(board)
+    #print(cdata, tdata)
+    # print(board)
     # return (board, cards, tasks)
     return render_template('board/index.html', cards=cards, tasks=tasks)
 
@@ -47,6 +47,7 @@ def index():
 @bp.route('/addCard', methods=('GET', 'POST'))
 # @login_required
 def addCard():
+    print(request.method)
     if request.method == 'POST':
         title = request.form['title']
         error = None
@@ -72,6 +73,7 @@ def addCard():
 @bp.route('/<int:id>/addTask', methods=('GET', 'POST'))
 # @login_required
 def addTask(id):
+    print(request.method)
     if request.method == 'POST':
         body = request.form['body']
         error = None
@@ -137,7 +139,7 @@ def updateCard(cid):
         else:
             db = get_db()
             db.execute(
-                'UPDATE card SET title = ?, body = ?'
+                'UPDATE cards SET title = ?, body = ?'
                 ' WHERE id = ?',
                 (title, body, cid)
             )
@@ -174,11 +176,32 @@ def updateTask(cid):
     return render_template('blog/update.html', post=post)
 
 
-@bp.route('/<int:id>/delete', methods=('POST',))
-@login_required
-def delete(id):
-    get_post(id)
-    db = get_db()
-    db.execute('DELETE FROM post WHERE id = ?', (id,))
-    db.commit()
-    return redirect(url_for('blog.index'))
+@bp.route('/deleteTask/<int:cid>/<int:tid>/', methods=('GET', 'POST'))
+# @login_required
+def deleteTask(cid, tid):
+    print(request.method)
+    if request.method == 'POST':
+        db = get_db()
+        tord = db.execute(
+            'SELECT torder FROM tasks WHERE id=?',
+            (tid,)
+        ).fetchone()['torder']
+        num_tasks = db.execute(
+            'SELECT c.num_tasks FROM cards WHERE id=?',
+            (id,)
+        ).fetchone()['num_tasks']
+        db.execute('DELETE FROM tasks WHERE id = ?', (tid,))
+        db.execute(
+            'UPDATE cards SET num_task = ?'
+            'WHERE id = ?',
+            ((num_tasks-1), cid)
+        )
+        db.execute(
+            'UPDATE tasks SET torder = torder - 1'
+            'WHERE torder > ?',
+            (tord,)
+        )
+        db.commit()
+        return redirect(url_for('board.deleteTask'))
+    else:
+        return 'error'

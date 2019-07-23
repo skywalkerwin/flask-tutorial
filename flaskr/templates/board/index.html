@@ -11,7 +11,15 @@
       </div>
     </div>
     {% for task in tasks %} {% if task["pcard"] == card["id"] %}
-    <p class="body">{{ task["torder"] }}. {{ task["body"] }}</p>
+    <p class="body">
+      {{ task["torder"] }}. {{ task["body"] }}
+      <form
+        class="action"
+        href="{{ url_for('board.deleteTask', cid=task['pcard'], tid=task['id']) }}"
+        method="post"
+        ><input type="submit" value="X" /></form
+      >
+    </p>
     <hr />
     {% endif %}{% endfor %}
   </header>
