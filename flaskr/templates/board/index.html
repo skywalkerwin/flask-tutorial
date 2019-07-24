@@ -13,11 +13,11 @@
     {% for task in tasks %} {% if task["pcard"] == card["id"] %}
     <p class="body">
       {{ task["torder"] }}. {{ task["body"] }}
-      <form
+      <a
         class="action"
-        href="{{ url_for('board.deleteTask', cid=task['pcard'], tid=task['id']) }}"
+        href="{{ url_for('board.updateTask', cid=task['pcard'], tid=task['id']) }}"
         method="post"
-        ><input type="submit" value="X" /></form
+        >Update</a
       >
     </p>
     <hr />

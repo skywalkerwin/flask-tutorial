@@ -105,75 +105,59 @@ def addTask(id):
     return render_template('board/addTask.html')
 
 
-def get_post(id, check_author=True):
-    post = get_db().execute(
-        'SELECT p.id, title, body, created, author_id, username'
-        ' FROM post p JOIN user u ON p.author_id = u.id'
-        ' WHERE p.id = ?',
+def get_task(id):
+    task = get_db().execute(
+        'SELECT t.id, pcard, created, body, torder'
+        ' FROM tasks t'
+        ' WHERE t.id = ?',
         (id,)
     ).fetchone()
 
-    if post is None:
-        abort(404, "Post id {0} doesn't exist.".format(id))
-
-    if check_author and post['author_id'] != g.user['id']:
-        abort(403)
-
-    return post
+    return task
 
 
-@bp.route('/<int:id>/update', methods=('GET', 'POST'))
-def updateCard(cid):
-    post = get_post(id)
+@bp.route('/updateTask/<int:cid>/<int:tid>/', methods=('GET', 'POST'))
+def updateTask(cid, tid):
+    task = get_task(tid)
 
     if request.method == 'POST':
-        title = request.form['title']
         body = request.form['body']
         error = None
-
-        if not title:
-            error = 'Title is required.'
 
         if error is not None:
             flash(error)
         else:
             db = get_db()
             db.execute(
-                'UPDATE cards SET title = ?, body = ?'
+                'UPDATE tasks SET body = ?'
                 ' WHERE id = ?',
-                (title, body, cid)
+                (body, tid)
             )
             db.commit()
-            return redirect(url_for('blog.index'))
 
-    return render_template('blog/update.html', post=post)
-
-
-@bp.route('/<int:id>/update', methods=('GET', 'POST'))
-def updateTask(cid):
-    post = get_post(id)
-
-    if request.method == 'POST':
-        title = request.form['title']
-        body = request.form['body']
-        error = None
-
-        if not title:
-            error = 'Title is required.'
-
-        if error is not None:
-            flash(error)
-        else:
+            board = {}
             db = get_db()
-            db.execute(
-                'UPDATE card SET title = ?, body = ?'
-                ' WHERE id = ?',
-                (title, body, cid)
-            )
-            db.commit()
-            return redirect(url_for('blog.index'))
+            cards = db.execute(
+                'SELECT c.id, title,  created'
+                ' FROM cards c'
+                ' ORDER BY created DESC'
+            ).fetchall()
+            tasks = db.execute(
+                'SELECT t.id, body, created, pcard, torder'
+                ' FROM tasks t'
+                ' ORDER BY created ASC'
+            ).fetchall()
+            cdata = []
+            tdata = []
+            for c in cards:
+                cdata.append([x for x in c])
+            for t in tasks:
+                tdata.append([x for x in t])
+            for c in cards:
+                board[c['title']] = []
+            return redirect(url_for('board.index'))
 
-    return render_template('blog/update.html', post=post)
+    return render_template('board/updateTask.html', task=task)
 
 
 @bp.route('/deleteTask/<int:cid>/<int:tid>/', methods=('GET', 'POST'))
@@ -186,22 +170,26 @@ def deleteTask(cid, tid):
             'SELECT torder FROM tasks WHERE id=?',
             (tid,)
         ).fetchone()['torder']
+        print('TORDER IS: ')
+        print(tord)
         num_tasks = db.execute(
-            'SELECT c.num_tasks FROM cards WHERE id=?',
-            (id,)
+            'SELECT num_tasks FROM cards WHERE id=?',
+            (cid,)
         ).fetchone()['num_tasks']
         db.execute('DELETE FROM tasks WHERE id = ?', (tid,))
+        db.commit()
         db.execute(
-            'UPDATE cards SET num_task = ?'
+            'UPDATE cards SET num_tasks = ?'
             'WHERE id = ?',
             ((num_tasks-1), cid)
         )
+        db.commit()
         db.execute(
-            'UPDATE tasks SET torder = torder - 1'
-            'WHERE torder > ?',
+            'UPDATE tasks SET torder = (torder - 1)'
+            'WHERE (torder > ?)',
             (tord,)
         )
         db.commit()
-        return redirect(url_for('board.deleteTask'))
+        return redirect(url_for('board.index'))
     else:
         return 'error'
