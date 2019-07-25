@@ -15,11 +15,6 @@
   action="{{ url_for('board.deleteTask', cid=task['pcard'], tid=task['id']) }}"
   method="post"
 >
-  <input
-    class="danger"
-    type="submit"
-    value="Delete"
-    onclick="return confirm('Are you sure?');"
-  />
+  <input class="danger" type="submit" value="Delete" />
 </form>
 {% endblock %}
