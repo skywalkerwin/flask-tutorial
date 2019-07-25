@@ -1,1 +1,1 @@
-web: sudo ./run.sh
+web: chmod +x run.sh && ./run.sh
