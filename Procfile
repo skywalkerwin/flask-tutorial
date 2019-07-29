@@ -1,2 +1,2 @@
-web: flask init-db; gunicorn wsgi:app
+web: gunicorn wsgi:app
 
