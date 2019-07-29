@@ -6,7 +6,8 @@ Click==7.0
 colorama==0.4.1
 coverage==4.5.3
 Flask==1.1.1
--e git+https://github.com/skywalkerwin/flask-tutorial.git@7f67524b42122503b618d846eba080fdf00e3156#egg=flaskr
+Flask-SQLAlchemy==2.4.0
+-e git+https://github.com/skywalkerwin/flask-tutorial.git@23752a13d6f3ee9b20b73dfadff8bbecc64599e9#egg=flaskr
 gunicorn==19.9.0
 importlib-metadata==0.18
 isort==4.3.21
@@ -24,6 +25,7 @@ pylint==2.3.1
 pyparsing==2.4.0
 pytest==5.0.1
 six==1.12.0
+SQLAlchemy==1.3.6
 typed-ast==1.4.0
 wcwidth==0.1.7
 Werkzeug==0.15.4
