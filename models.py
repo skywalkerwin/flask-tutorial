@@ -1,6 +1,5 @@
+from wsgi import db
 from sqlalchemy.dialects.postgresql import JSON
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, Integer, String
 
 
 class Result(db.Model):
