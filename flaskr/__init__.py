@@ -1,6 +1,8 @@
 import os
 
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+db = SQLAlchemy()
 
 
 def create_app(test_config=None):
@@ -9,7 +11,7 @@ def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_pyfile('config.py', silent=True)
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    db.init_app(app)
+    db.init_app()
     from models import Result
    # app.config.from_mapping(
    #  SECRET_KEY='dev',
@@ -45,3 +47,9 @@ def create_app(test_config=None):
     app.add_url_rule('/', endpoint='index')
 
     return app
+
+
+app = create_app()
+
+if __name__ == '__main__':
+    app.run()
